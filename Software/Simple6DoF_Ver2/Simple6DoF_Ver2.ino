@@ -1,14 +1,14 @@
 /*
-Simple script to move my tiny 6dof robotic arm
-简单的脚本，移动我的小6自由度机械臂
+ * Simple script to move my tiny 6dof robotic arm
+ * 简单的脚本，移动我的小6自由度机械臂
 */
 #include <math.h>
 
 #define PI 3.1415926535897932384626433832795
 
-//driver for the axis 1 //驱动轴1
-#define PUL1_PIN 39
-#define DIR1_PIN 37
+//driver for the axis 1   //轴1步进电机的驱动引脚 
+#define PUL1_PIN 39       //脉冲IO
+#define DIR1_PIN 37       //方向IO
 //driver for the axis 2
 #define PUL2_PIN 43
 #define DIR2_PIN 41
@@ -26,8 +26,8 @@ Simple script to move my tiny 6dof robotic arm
 #define DIR6_PIN A1
 
 //enable pin for the axis 3, 2 and 1  //使能引脚
-#define EN321_PIN 32
-#define EN4_PIN A8
+#define EN321_PIN 32  //轴123的使能引脚
+#define EN4_PIN A8    //轴4的使能引脚
 #define EN5_PIN A2
 #define EN6_PIN 38
 

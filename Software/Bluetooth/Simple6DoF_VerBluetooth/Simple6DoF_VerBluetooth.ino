@@ -1,6 +1,6 @@
 /*
-Simple script to move my tiny 6dof robotic arm
-*/
+ * Simple script to move my tiny 6dof robotic arm
+ */
 #include <math.h>
 //#include <SoftwareSerial.h>
 
@@ -499,45 +499,46 @@ void goTrajectory(float* Jf){
   }
 }
 
+/*
+ * 函 数 名：InverseK
+ *          inverse kinematics 逆向运动学
+ * 输入参数：Xik - pos value for the calculation of the inverse kinematics
+ * 输出参数：Jfk - joints value for the calculation of the inversed kinematics
+ */
 void InverseK(float* Xik, float* Jik)
 {
-  // inverse kinematics //逆向运动学
-  // input: Xik - pos value for the calculation of the inverse kinematics
-  // output: Jfk - joints value for the calculation of the inversed kinematics
-  
-  // from deg to rad
-  // Xik(4:6)=Xik(4:6)*pi/180;
+  /* from deg to rad 角度制转弧度制 */ 
   Xik[3]=Xik[3]*PI/180.0;
   Xik[4]=Xik[4]*PI/180.0;
   Xik[5]=Xik[5]*PI/180.0;
-  // Denavit-Hartenberg matrix
-  float theta[6]={0.0, -90.0, 0.0, 0.0, 0.0, 0.0}; // theta=[0; -90+0; 0; 0; 0; 0];
-  float alfa[6]={-90.0, 0.0, -90.0, 90.0, -90.0, 0.0}; // alfa=[-90; 0; -90; 90; -90; 0];
-  float r[6]={r1, r2, r3, 0.0, 0.0, 0.0}; // r=[47; 110; 26; 0; 0; 0];
-  float d[6]={d1, 0.0, d3, d4, 0.0, d6}; // d=[133; 0; 7; 117.5; 0; 28];
-  // from deg to rad
-  MatrixScale(theta, 6, 1, PI/180.0); // theta=theta*pi/180;
-  MatrixScale(alfa, 6, 1, PI/180.0); // alfa=alfa*pi/180;
-  // work frame
-  float Xwf[6]={0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // Xwf=[0; 0; 0; 0; 0; 0];
-  // tool frame
-  float Xtf[6]={0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // Xtf=[0; 0; 0; 0; 0; 0];
-  // work frame transformation matrix
+  /* Denavit-Hartenberg matrix  D-H矩阵 */
+  float theta[6] = {0.0, -90.0, 0.0, 0.0, 0.0, 0.0};      // theta = [0; -90+0; 0; 0; 0; 0];
+  float alfa[6]  = {-90.0, 0.0, -90.0, 90.0, -90.0, 0.0}; // alfa  = [-90; 0; -90; 90; -90; 0];
+  float r[6]     = {r1, r2, r3, 0.0, 0.0, 0.0};           // r     = [47; 110; 26; 0; 0; 0];
+  float d[6]     = {d1, 0.0, d3, d4, 0.0, d6};            // d     = [133; 0; 7; 117.5; 0; 28];
+  /* from deg to rad  角度转弧度 */
+  MatrixScale(theta, 6, 1, PI/180.0); 
+  MatrixScale(alfa, 6, 1, PI/180.0);  
+  /* work frame 工作坐标 */
+  float Xwf[6]={0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
+  /* tool frame 工具坐标 */
+  float Xtf[6]={0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
+  /* work frame transformation matrix 工作坐标变换矩阵 */
   float Twf[16];
-  pos2tran(Xwf, Twf); // Twf=pos2tran(Xwf);
-  // tool frame transformation matrix
-  float Ttf[16];
-  pos2tran(Xtf, Ttf); // Ttf=pos2tran(Xtf);
-  // total transformation matrix
+  pos2tran(Xwf, Twf);  
+  /* tool frame transformation matrix 工具坐标变换矩阵 */
+  float Ttf[16];  
+  pos2tran(Xtf, Ttf);  
+  /* total transformation matrix 总变换矩阵 */
   float Twt[16];
-  pos2tran(Xik, Twt); // Twt=pos2tran(Xik);
-  // find T06
+  pos2tran(Xik, Twt);  
+  /* find T06 找到T06 */
   float inTwf[16], inTtf[16], Tw6[16], T06[16];
-  invtran(Twf, inTwf); // inTwf=invtran(Twf);
-  invtran(Ttf, inTtf); // inTtf=invtran(Ttf);
-  MatrixMultiply(Twt, inTtf, 4, 4, 4, Tw6); // Tw6=Twt*inTtf;
-  MatrixMultiply(inTwf, Tw6, 4, 4, 4, T06); // T06=inTwf*Tw6;
-  // positon of the spherical wrist
+  invtran(Twf, inTwf);  
+  invtran(Ttf, inTtf);  
+  MatrixMultiply(Twt, inTtf, 4, 4, 4, Tw6); 
+  MatrixMultiply(inTwf, Tw6, 4, 4, 4, T06); 
+  /* positon of the spherical wrist 球形手腕的位置 */
   float Xsw[3];
   // Xsw=T06(1:3,4)-d(6)*T06(1:3,3);
   Xsw[0]=T06[0*4 + 3]-d[5]*T06[0*4 + 2];
@@ -545,17 +546,17 @@ void InverseK(float* Xik, float* Jik)
   Xsw[2]=T06[2*4 + 3]-d[5]*T06[2*4 + 2];
   // joints variable
   // Jik=zeros(6,1);
-  // first joint
+  /* first joint 第1个关节 */
   Jik[0]=atan2(Xsw[1],Xsw[0])-atan2(d[2],sqrt(Xsw[0]*Xsw[0]+Xsw[1]*Xsw[1]-d[2]*d[2])); // Jik(1)=atan2(Xsw(2),Xsw(1))-atan2(d(3),sqrt(Xsw(1)^2+Xsw(2)^2-d(3)^2));
-  // second joint
+  /* second joint 第2个关节 */
   Jik[1]=PI/2.0
   -acos((r[1]*r[1]+(Xsw[2]-d[0])*(Xsw[2]-d[0])+(sqrt(Xsw[0]*Xsw[0]+Xsw[1]*Xsw[1]-d[2]*d[2])-r[0])*(sqrt(Xsw[0]*Xsw[0]+Xsw[1]*Xsw[1]-d[2]*d[2])-r[0])-(r[2]*r[2]+d[3]*d[3]))/(2.0*r[1]*sqrt((Xsw[2]-d[0])*(Xsw[2]-d[0])+(sqrt(Xsw[0]*Xsw[0]+Xsw[1]*Xsw[1]-d[2]*d[2])-r[0])*(sqrt(Xsw[0]*Xsw[0]+Xsw[1]*Xsw[1]-d[2]*d[2])-r[0]))))
   -atan((Xsw[2]-d[0])/(sqrt(Xsw[0]*Xsw[0]+Xsw[1]*Xsw[1]-d[2]*d[2])-r[0])); // Jik(2)=pi/2-acos((r(2)^2+(Xsw(3)-d(1))^2+(sqrt(Xsw(1)^2+Xsw(2)^2-d(3)^2)-r(1))^2-(r(3)^2+d(4)^2))/(2*r(2)*sqrt((Xsw(3)-d(1))^2+(sqrt(Xsw(1)^2+Xsw(2)^2-d(3)^2)-r(1))^2)))-atan((Xsw(3)-d(1))/(sqrt(Xsw(1)^2+Xsw(2)^2-d(3)^2)-r(1)));
-  // third joint
+  /* third joint 第3个关节 */
   Jik[2]=PI
   -acos((r[1]*r[1]+r[2]*r[2]+d[3]*d[3]-(Xsw[2]-d[0])*(Xsw[2]-d[0])-(sqrt(Xsw[0]*Xsw[0]+Xsw[1]*Xsw[1]-d[2]*d[2])-r[0])*(sqrt(Xsw[0]*Xsw[0]+Xsw[1]*Xsw[1]-d[2]*d[2])-r[0]))/(2*r[1]*sqrt(r[2]*r[2]+d[3]*d[3])))
   -atan(d[3]/r[2]); // Jik(3)=pi-acos((r(2)^2+r(3)^2+d(4)^2-(Xsw(3)-d(1))^2-(sqrt(Xsw(1)^2+Xsw(2)^2-d(3)^2)-r(1))^2)/(2*r(2)*sqrt(r(3)^2+d(4)^2)))-atan(d(4)/r(3));
-  // last three joints
+  /* last three joints 最后3个关节 */
   float T01[16], T12[16], T23[16], T02[16], T03[16], inT03[16], T36[16];
   DH1line(theta[0]+Jik[0], alfa[0], r[0], d[0], T01); // T01=DH1line(theta(1)+Jik(1),alfa(1),r(1),d(1));
   DH1line(theta[1]+Jik[1], alfa[1], r[1], d[1], T12); // T12=DH1line(theta(2)+Jik(2),alfa(2),r(2),d(2));
@@ -564,43 +565,45 @@ void InverseK(float* Xik, float* Jik)
   MatrixMultiply(T02, T23, 4, 4, 4, T03); // T03=T02*T23;
   invtran(T03, inT03); // inT03=invtran(T03);
   MatrixMultiply(inT03, T06, 4, 4, 4, T36); // T36=inT03*T06;
-  // forth joint
+  /* forth joint  第4个关节 */
   Jik[3]=atan2(-T36[1*4+2], -T36[0*4+2]); // Jik(4)=atan2(-T36(2,3),-T36(1,3));
-  // fifth joint
+  /* fifth joint  第5个关节 */
   Jik[4]=atan2(sqrt(T36[0*4+2]*T36[0*4+2]+T36[1*4+2]*T36[1*4+2]), T36[2*4+2]); // Jik(5)=atan2(sqrt(T36(1,3)^2+T36(2,3)^2),T36(3,3));
-  // sixth joints
+  /* sixth joints 第6个关节 */
   Jik[5]=atan2(-T36[2*4+1], T36[2*4+0]); // Jik(6)=atan2(-T36(3,2),T36(3,1));
-  // rad to deg
-  MatrixScale(Jik, 6, 1, 180.0/PI); // Jik=Jik/pi*180;
+  /* rad to deg  弧度转角度 */
+  MatrixScale(Jik, 6, 1, 180.0/PI); 
 }
 
+/*
+ * 函 数 名：ForwardK
+ *          forward kinematics 正向运动学
+ * 输入参数：Jfk - joints value for the calculation of the forward kinematics [j1,j2,j3,j4,j5,j6]
+ * 输出参数：Xfk - pos value for the calculation of the forward kinematics    [X,Y,Z,A,B,C]
+ */
 void ForwardK(float* Jfk, float* Xfk)
 {
-  // forward kinematics //正向运动学
-  // input: Jfk - joints value for the calculation of the forward kinematics
-  // output: Xfk - pos value for the calculation of the forward kinematics
-  
-  // Denavit-Hartenberg matrix
+  /* Denavit-Hartenberg matrix */
   float theTemp[6]={0.0, -90.0, 0.0, 0.0, 0.0, 0.0};
   float theta[6];
-  MatrixAdd(theTemp, Jfk, 6, 1, theta); // theta=[Jfk(1); -90+Jfk(2); Jfk(3); Jfk(4); Jfk(5); Jfk(6)];
-  float alfa[6]={-90.0, 0.0, -90.0, 90.0, -90.0, 0.0}; // alfa=[-90; 0; -90; 90; -90; 0];
+  MatrixAdd(theTemp, Jfk, 6, 1, theta);   // theta=[Jfk(1); -90+Jfk(2); Jfk(3); Jfk(4); Jfk(5); Jfk(6)];
+  float alfa[6]={-90.0, 0.0, -90.0, 90.0, -90.0, 0.0}; 
   float r[6]={r1, r2, r3, 0.0, 0.0, 0.0}; // r=[47; 110; 26; 0; 0; 0];
-  float d[6]={d1, 0.0, d3, d4, 0.0, d6}; // d=[133; 0; 7; 117.5; 0; 28];
-  // from deg to rad
-  MatrixScale(theta, 6, 1, PI/180.0); // theta=theta*pi/180;
-  MatrixScale(alfa, 6, 1, PI/180.0); // alfa=alfa*pi/180;
-  // work frame
-  float Xwf[6]={0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // Xwf=[0; 0; 0; 0; 0; 0];
-  // tool frame
-  float Xtf[6]={0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // Xtf=[0; 0; 0; 0; 0; 0];
-  // work frame transformation matrix
+  float d[6]={d1, 0.0, d3, d4, 0.0, d6};  // d=[133; 0; 7; 117.5; 0; 28];
+  /* from deg to rad */
+  MatrixScale(theta, 6, 1, PI/180.0);     // theta=theta*pi/180;
+  MatrixScale(alfa, 6, 1, PI/180.0);      // alfa=alfa*pi/180;
+  /* work frame */
+  float Xwf[6]={0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
+  /* tool frame */
+  float Xtf[6]={0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
+  /* work frame transformation matrix */
   float Twf[16];
   pos2tran(Xwf, Twf); // Twf=pos2tran(Xwf);
-  // tool frame transformation matrix
+  /* tool frame transformation matrix */
   float Ttf[16];
   pos2tran(Xtf, Ttf); // Ttf=pos2tran(Xtf);
-  // DH homogeneous transformation matrix
+  /* DH homogeneous transformation matrix */
   float T01[16], T12[16], T23[16], T34[16], T45[16], T56[16];
   DH1line(theta[0], alfa[0], r[0], d[0], T01); // T01=DH1line(theta(1),alfa(1),r(1),d(1));
   DH1line(theta[1], alfa[1], r[1], d[1], T12); // T12=DH1line(theta(2),alfa(2),r(2),d(2));
@@ -618,31 +621,31 @@ void ForwardK(float* Jfk, float* Xfk)
   MatrixMultiply(Tw6, Ttf, 4, 4, 4, Twt); // Twt=Tw6*Ttf;
   // calculate pos from transformation matrix
   tran2pos(Twt, Xfk); // Xfk=tran2pos(Twt);
-  // Xfk(4:6)=Xfk(4:6)/pi*180;
-  Xfk[3]=Xfk[3]/PI*180.0;
-  Xfk[4]=Xfk[4]/PI*180.0;
+  /* 弧度转为角度 *//* 欧拉角 */
+  Xfk[3]=Xfk[3]/PI*180.0; 
+  Xfk[4]=Xfk[4]/PI*180.0; 
   Xfk[5]=Xfk[5]/PI*180.0;
 }
 
 void invtran(float* Titi, float* Titf)
 {
   // finding the inverse of the homogeneous transformation matrix //求齐次变换矩阵的逆
-  // first row
+  // first row    //第1行
   Titf[0*4 + 0] = Titi[0*4 + 0];
   Titf[0*4 + 1] = Titi[1*4 + 0];
   Titf[0*4 + 2] = Titi[2*4 + 0];
   Titf[0*4 + 3] = -Titi[0*4 + 0]*Titi[0*4 + 3]-Titi[1*4 + 0]*Titi[1*4 + 3]-Titi[2*4 + 0]*Titi[2*4 + 3];
-  // second row
+  // second row   //第2行
   Titf[1*4 + 0] = Titi[0*4 + 1];
   Titf[1*4 + 1] = Titi[1*4 + 1];
   Titf[1*4 + 2] = Titi[2*4 + 1];
   Titf[1*4 + 3] = -Titi[0*4 + 1]*Titi[0*4 + 3]-Titi[1*4 + 1]*Titi[1*4 + 3]-Titi[2*4 + 1]*Titi[2*4 + 3];
-  // third row
+  // third row    //第3行
   Titf[2*4 + 0] = Titi[0*4 + 2];
   Titf[2*4 + 1] = Titi[1*4 + 2];
   Titf[2*4 + 2] = Titi[2*4 + 2];
   Titf[2*4 + 3] = -Titi[0*4 + 2]*Titi[0*4 + 3]-Titi[1*4 + 2]*Titi[1*4 + 3]-Titi[2*4 + 2]*Titi[2*4 + 3];
-  // forth row
+  // forth row    //第4行
   Titf[3*4 + 0] = 0.0;
   Titf[3*4 + 1] = 0.0;
   Titf[3*4 + 2] = 0.0;
@@ -663,22 +666,22 @@ void tran2pos(float* Ttp, float* Xtp)
 void pos2tran(float* Xpt, float* Tpt)
 {
   // pos to homogeneous transformation matrix //点坐标到齐次变换矩阵
-  // first row
+  // first row  //第1行
   Tpt[0*4 + 0] = cos(Xpt[3])*cos(Xpt[4])*cos(Xpt[5])-sin(Xpt[3])*sin(Xpt[5]);
   Tpt[0*4 + 1] = -cos(Xpt[3])*cos(Xpt[4])*sin(Xpt[5])-sin(Xpt[3])*cos(Xpt[5]);
   Tpt[0*4 + 2] = cos(Xpt[3])*sin(Xpt[4]);
   Tpt[0*4 + 3] = Xpt[0];
-  // second row
+  // second row //第2行
   Tpt[1*4 + 0] = sin(Xpt[3])*cos(Xpt[4])*cos(Xpt[5])+cos(Xpt[3])*sin(Xpt[5]);
   Tpt[1*4 + 1] = -sin(Xpt[3])*cos(Xpt[4])*sin(Xpt[5])+cos(Xpt[3])*cos(Xpt[5]);
   Tpt[1*4 + 2] = sin(Xpt[3])*sin(Xpt[4]);
   Tpt[1*4 + 3] = Xpt[1];
-  // third row
+  // third row  //第3行
   Tpt[2*4 + 0] = -sin(Xpt[4])*cos(Xpt[5]);
   Tpt[2*4 + 1] = sin(Xpt[4])*sin(Xpt[5]);
   Tpt[2*4 + 2] = cos(Xpt[4]);
   Tpt[2*4 + 3] = Xpt[2];
-  // forth row
+  // forth row  //第4行
   Tpt[3*4 + 0] = 0.0;
   Tpt[3*4 + 1] = 0.0;
   Tpt[3*4 + 2] = 0.0;
@@ -687,32 +690,40 @@ void pos2tran(float* Xpt, float* Tpt)
 
 void DH1line(float thetadh, float alfadh, float rdh, float ddh, float* Tdh)
 {
-  // creats Denavit-Hartenberg homogeneous transformation matrix  //建立德纳维-哈滕伯格齐次变换矩阵
-  // first row
+  // creats Denavit-Hartenberg homogeneous transformation matrix  //建立D-H齐次变换矩阵
+  // first row  //第1行
   Tdh[0*4 + 0] = cos(thetadh);
   Tdh[0*4 + 1] = -sin(thetadh)*cos(alfadh);
   Tdh[0*4 + 2] = sin(thetadh)*sin(alfadh);
   Tdh[0*4 + 3] = rdh*cos(thetadh);
-  // second row
+  // second row //第2行
   Tdh[1*4 + 0] = sin(thetadh);
   Tdh[1*4 + 1] = cos(thetadh)*cos(alfadh);
   Tdh[1*4 + 2] = -cos(thetadh)*sin(alfadh);
   Tdh[1*4 + 3] = rdh*sin(thetadh);
-  // third row
+  // third row  //第3行
   Tdh[2*4 + 0] = 0.0;
   Tdh[2*4 + 1] = sin(alfadh);
   Tdh[2*4 + 2] = cos(alfadh);
   Tdh[2*4 + 3] = ddh;
-  // forth row
+  // forth row  //第4行
   Tdh[3*4 + 0] = 0.0;
   Tdh[3*4 + 1] = 0.0;
   Tdh[3*4 + 2] = 0.0;
   Tdh[3*4 + 3] = 1.0;
 }
 
+/*
+ * 函 数 名：MatrixPrint
+ *          Matrix Print 矩阵的串口打印函数
+ * 输入参数：A = input matrix (m x n)
+ *          m = number of rows in A 
+ *          n = number of columns in A
+ *          label = 
+ * 输出参数：
+ */
 void MatrixPrint(float* A, int m, int n, String label)
 {
-  // A = input matrix (m x n)
   int i, j;
   Serial.println();
   Serial.println(label);
@@ -727,6 +738,14 @@ void MatrixPrint(float* A, int m, int n, String label)
   }
 }
 
+/*
+ * 函 数 名：MatrixCopy
+ *          Matrix Copy 矩阵的复制函数
+ * 输入参数：A = input matrix (m x n)
+ *          m = number of rows in A 
+ *          n = number of columns in A
+ * 输出参数：B = output matrix = A(m x n)
+ */
 void MatrixCopy(float* A, int n, int m, float* B)
 {
   int i, j;
@@ -737,17 +756,18 @@ void MatrixCopy(float* A, int n, int m, float* B)
     }
 }
 
-//矩阵的乘法
-//Matrix Multiplication Routine
-// C = A*B
+/*
+ * 函 数 名：MatrixMultiply
+ *          Matrix Multiplication Routine 矩阵的乘法
+ * 输入参数：A = input matrix (m x p)
+ *          B = input matrix (p x n)
+ *          m = number of rows in A 
+ *          p = number of columns in A = number of rows in B
+ *          n = number of columns in B
+ * 输出参数：C = output matrix = A*B (m x n)
+ */
 void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C)
 {
-  // A = input matrix (m x p)
-  // B = input matrix (p x n)
-  // m = number of rows in A
-  // p = number of columns in A = number of rows in B
-  // n = number of columns in B
-  // C = output matrix = A*B (m x n)
   int i, j, k;
   for (i = 0; i < m; i++)
     for(j = 0; j < n; j++)
@@ -758,54 +778,69 @@ void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C)
     }
 }
 
-//矩阵的加法
-//Matrix Addition Routine
+/*
+ * 函 数 名：MatrixAdd
+ *          Matrix Addition Routine 矩阵的加法
+ * 输入参数：A = input matrix (m x n)
+ *          B = input matrix (m x n)
+ *          m = number of rows in A = number of rows in B
+ *          n = number of columns in A = number of columns in B
+ * 输出参数：C = output matrix = A+B (m x n)
+ */
 void MatrixAdd(float* A, float* B, int m, int n, float* C)
 {
-  // A = input matrix (m x n)
-  // B = input matrix (m x n)
-  // m = number of rows in A = number of rows in B
-  // n = number of columns in A = number of columns in B
-  // C = output matrix = A+B (m x n)
   int i, j;
   for (i = 0; i < m; i++)
     for(j = 0; j < n; j++)
       C[n * i + j] = A[n * i + j] + B[n * i + j];
 }
 
-//矩阵的减法
-//Matrix Subtraction Routine
+/*
+ * 函 数 名：MatrixSubtract
+ *          Matrix Subtraction Routine 矩阵的减法
+ * 输入参数：A = input matrix (m x n)
+ *          B = input matrix (m x n)
+ *          m = number of rows in A = number of rows in B
+ *          n = number of columns in A = number of columns in B
+ * 输出参数：C = output matrix = A-B (m x n)
+ */
 void MatrixSubtract(float* A, float* B, int m, int n, float* C)
 {
-  // A = input matrix (m x n)
-  // B = input matrix (m x n)
-  // m = number of rows in A = number of rows in B
-  // n = number of columns in A = number of columns in B
-  // C = output matrix = A-B (m x n)
   int i, j;
   for (i = 0; i < m; i++)
     for(j = 0; j < n; j++)
       C[n * i + j] = A[n * i + j] - B[n * i + j];
 }
 
-//矩阵的转置程序
-//Matrix Transpose Routine
+/*
+ * 函 数 名：MatrixTranspose
+ *          Matrix Transpose Routine 矩阵的转置程序
+ * 输入参数：A = input matrix (m x n)
+ *          m = number of rows in A 
+ *          n = number of columns in A 
+ * 输出参数：C = output matrix = the transpose of A (n x m)
+ */
 void MatrixTranspose(float* A, int m, int n, float* C)
 {
-  // A = input matrix (m x n)
-  // m = number of rows in A
-  // n = number of columns in A
-  // C = output matrix = the transpose of A (n x m)
   int i, j;
   for (i = 0; i < m; i++)
     for(j = 0; j < n; j++)
       C[m * j + i] = A[n * i + j];
 }
 
-/* 矩阵比例变化程序 */
+/*
+ * 函 数 名：MatrixScale
+ *          Matrix scaling operation 矩阵的比例运算
+ * 输入参数：A = input matrix (m x n)
+ *          m = number of rows in A
+ *          n = number of columns in A
+ *          K = the Matrix scale factor
+ * 输出参数：A = input matrix A(m x n) * K
+ */
 void MatrixScale(float* A, int m, int n, float k)
 {
   for (int i = 0; i < m; i++)
     for (int j = 0; j < n; j++)
       A[n * i + j] = A[n * i + j] * k;
 }
+
